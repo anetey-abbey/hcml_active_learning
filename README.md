@@ -2,6 +2,32 @@
 
 This repo shows our HCML AL experiments.
 
+## Dataset
+
+**gametox_merged**: ([gametox](https://raw.githubusercontent.com/shucoll/GameTox/main/gametox.csv)) This is a modified version of the gametox dataset, with the only change being that the classes "hate", "threats", and "extremism" have been merged into a single class. This was done because these individual classes had too low of a sample size for effective model training and evaluation in the active learning setting.
+
+#### Original GameTox (6 classes)
+
+| Label ID | Class Name | Count | Percentage |
+|----------|------------|-------|------------|
+| 0 | NON_TOXIC | 43,497 | 81.0% |
+| 1 | INSULTS_FLAMING | 7,407 | 13.8% |
+| 2 | OTHER_OFFENSIVE | 2,343 | 4.4% |
+| 3 | HATE_HARASSMENT | 349 | 0.6% |
+| 4 | THREATS | 75 | 0.1% |
+| 5 | EXTREMISM | 30 | 0.1% |
+| **Total** | | **53,701** | **100%** |
+
+#### Merged GameTox (4 classes)
+
+| Label ID | Class Name | Count | Percentage |
+|----------|------------|-------|------------|
+| 0 | NON_TOXIC | 43,497 | 81.0% |
+| 1 | INSULTS_FLAMING | 7,407 | 13.8% |
+| 2 | OTHER_OFFENSIVE | 2,343 | 4.4% |
+| 3 | HATE_THREATS_EXTREMISM | 454 | 0.8% |
+| **Total** | | **53,701** | **100%** |
+
 
 ## Setup
 
@@ -15,48 +41,6 @@ pip install -r requirements.txt
 
 On Windows, use `venv\Scripts\activate`
 
-## Data Format
-
-The project expects data in JSONL format (one JSON object per line). Each line must have two fields:
-
-- `text`: the input text to classify
-- `label`: an integer label starting from 0
-
-Place your data files in `data/<dataset_name>/` with the following structure:
-
-```
-data/
-  dataset_name/
-    train.jsonl
-    validation.jsonl
-    test.jsonl
-```
-
-### Binary Classification Example
-
-For binary tasks use labels 0 and 1:
-
-```jsonl
-{"text": "This is a positive example", "label": 1}
-{"text": "This is a negative example", "label": 0}
-```
-
-### Multi-class Classification Example
-
-For multi-class tasks, use integer labels starting from 0:
-
-```jsonl
-{"text": "Breaking news about politics", "label": 0}
-{"text": "The team won the championship", "label": 1}
-{"text": "Stock market reaches new high", "label": 2}
-```
-
-## Datasets
-
-- [aegis](https://huggingface.co/datasets/nvidia/Aegis-AI-Content-Safety-Dataset-1.0)
-- [ag_news](https://huggingface.co/datasets/ag_news)
-- [hate_speech_offensive](https://huggingface.co/datasets/hate_speech_offensive)
-
 ## Configuration
 
 Edit `config.py` to set up experiment variables.
@@ -67,4 +51,4 @@ Edit `config.py` to set up experiment variables.
 python training.py
 ```
 
-Results (graph + csv) are saved to the `results` folder.
+Results (graphs + csv) are saved to the `results` folder.
