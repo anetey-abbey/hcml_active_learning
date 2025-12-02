@@ -74,7 +74,7 @@ def active_learning_loop(
 
         pbar.set_postfix({"samples": len(labeled_data)})
 
-        model, val_f1, test_f1 = train_model(
+        model, val_metrics, test_metrics = train_model(
             train_dataset,
             val_loader,
             test_loader,
@@ -88,14 +88,13 @@ def active_learning_loop(
             seed=seed,
         )
 
-        results.append(
-            {
-                "iteration": iteration,
-                "labeled_count": len(labeled_data),
-                "val_f1": val_f1,
-                "test_f1": test_f1,
-            }
-        )
+        # Store val and test metrics
+        result = {"iteration": iteration, "labeled_count": len(labeled_data)}
+        for k, v in val_metrics.items():
+            result[f"val_{k}"] = v
+        for k, v in test_metrics.items():
+            result[f"test_{k}"] = v
+        results.append(result)
 
         # Select new samples to label for the next iteration
         if iteration < num_iterations and len(unlabeled_indices) > 0:

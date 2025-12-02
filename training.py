@@ -3,11 +3,13 @@ import warnings
 from datetime import datetime
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import f1_score, accuracy_score
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from transformers import logging as transformers_logging
+warnings.filterwarnings("ignore")
+transformers_logging.set_verbosity_error()
 
 from dataset import load_data
 
@@ -39,8 +41,16 @@ def parse_args():
     parser.add_argument("--annotator-noise", type=float, default=config.ANNOTATOR_NOISE)
     return parser.parse_args()
 
-warnings.filterwarnings("ignore")
-transformers_logging.set_verbosity_error()
+def compute_all_metrics(y_true, y_pred, num_classes):
+    per_class_f1 = f1_score(y_true, y_pred, average=None, zero_division=0, labels=range(num_classes))
+    metrics = {
+        "accuracy": accuracy_score(y_true, y_pred),
+        "weighted_f1": f1_score(y_true, y_pred, average="weighted", zero_division=0),
+        "macro_f1": f1_score(y_true, y_pred, average="macro", zero_division=0),
+    }
+    for i in range(num_classes):
+        metrics[f"f1_class_{i}"] = per_class_f1[i]
+    return metrics
 
 
 def train_epoch(model, dataloader, optimizer, device):
@@ -63,7 +73,7 @@ def train_epoch(model, dataloader, optimizer, device):
     return total_loss / len(dataloader)
 
 
-def evaluate(model, dataloader, device):
+def evaluate(model, dataloader, device, num_classes):
     model.eval()
     predictions = []
     true_labels = []
@@ -78,10 +88,7 @@ def evaluate(model, dataloader, device):
             predictions.extend(preds.cpu().numpy())
             true_labels.extend(labels.cpu().numpy())
 
-    accuracy = accuracy_score(true_labels, predictions)
-    precision, recall, f1, _ = precision_recall_fscore_support(true_labels, predictions, average="weighted")
-
-    return accuracy, precision, recall, f1
+    return compute_all_metrics(true_labels, predictions, num_classes)
 
 
 def train_model(
@@ -109,9 +116,9 @@ def train_model(
     for _ in range(epochs):
         train_epoch(model, train_loader, optimizer, device)
 
-    _, _, _, val_f1 = evaluate(model, val_loader, device)
-    _, _, _, test_f1 = evaluate(model, test_loader, device)
-    return model, val_f1, test_f1
+    val_metrics = evaluate(model, val_loader, device, num_labels)
+    test_metrics = evaluate(model, test_loader, device, num_labels)
+    return model, val_metrics, test_metrics
 
 
 def main():
