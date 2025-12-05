@@ -126,6 +126,11 @@ def main():
 
     args = parse_args()
 
+    print("Configuration:")
+    for key, value in vars(args).items():
+        print(f"  {key}: {value}")
+    print("\n")
+
     if torch.cuda.is_available():
         device = torch.device("cuda")
     elif torch.backends.mps.is_available():
