@@ -8,12 +8,9 @@ from dataset import CustomDataset
 from training import train_model
 
 
-def get_uncertainty_scores(model, dataloader, device):
-    """
-    Margin sampling: smaller margin between top-2 class probs = higher uncertainty.
-    """
+def get_uncertainty_scores(model, dataloader, device, uncertainty_strategy):
     model.eval()
-    margins = []
+    scores = []
 
     with torch.no_grad():
         for batch in dataloader:
@@ -22,12 +19,15 @@ def get_uncertainty_scores(model, dataloader, device):
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
             probs = torch.softmax(outputs.logits, dim=1)
 
-            # Margin based on difference between top 2 class probabilities (lower margin means more uncertain)
-            top2 = torch.topk(probs, k=2, dim=1).values
-            margin = top2[:, 0] - top2[:, 1]
-            margins.extend(margin.cpu().numpy())
+            if uncertainty_strategy == "entropy":
+                score = (probs * torch.log(probs + 1e-9)).sum(dim=1)
+            else:  # margin sampling
+                top2 = torch.topk(probs, k=2, dim=1).values
+                score = top2[:, 0] - top2[:, 1]
 
-    return np.array(margins)
+            scores.extend(score.cpu().numpy())
+
+    return np.array(scores)
 
 
 def active_learning_loop(
@@ -48,6 +48,7 @@ def active_learning_loop(
     num_iterations=config.NUM_ITERATIONS,
     samples_per_iteration=config.SAMPLES_PER_ITERATION,
     annotator_noise=config.ANNOTATOR_NOISE,
+    uncertainty_strategy=config.UNCERTAINTY_STRATEGY,
 ):
     rng = np.random.default_rng(rng_seed)
     if initial_indices is not None:
@@ -72,7 +73,6 @@ def active_learning_loop(
             rng=rng,
         )
 
-        pbar.set_postfix({"samples": len(labeled_data)})
 
         model, val_metrics, test_metrics = train_model(
             train_dataset,
@@ -104,8 +104,14 @@ def active_learning_loop(
                     CustomDataset(unlabeled_data, tokenizer),
                     batch_size=batch_size,
                 )
-                margins = get_uncertainty_scores(model, unlabeled_loader, device)
-                selected_unlabeled_indices = np.argsort(margins)[:samples_per_iteration]
+                scores = get_uncertainty_scores(
+                    model,
+                    unlabeled_loader,
+                    device,
+                    uncertainty_strategy,
+                )
+                # select samples with lowest scores (most uncertain)
+                selected_unlabeled_indices = np.argsort(scores)[:samples_per_iteration]
                 selected_pool_indices = unlabeled_indices[selected_unlabeled_indices]
 
             else:

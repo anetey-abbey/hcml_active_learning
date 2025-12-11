@@ -39,6 +39,7 @@ def parse_args():
     parser.add_argument("--num-iterations", type=int, default=config.NUM_ITERATIONS)
     parser.add_argument("--samples-per-iteration", type=int, default=config.SAMPLES_PER_ITERATION)
     parser.add_argument("--annotator-noise", type=float, default=config.ANNOTATOR_NOISE)
+    parser.add_argument("--uncertainty-sampling-strategy", type=str, default=config.UNCERTAINTY_STRATEGY)
     return parser.parse_args()
 
 def compute_all_metrics(y_true, y_pred, num_classes):
@@ -181,6 +182,7 @@ def main():
             num_iterations=args.num_iterations,
             samples_per_iteration=args.samples_per_iteration,
             annotator_noise=args.annotator_noise,
+            uncertainty_strategy=args.uncertainty_sampling_strategy,
         )
 
         print(f"Seed {seed}: UNCERTAINTY SAMPLING (Active Learning)")
@@ -202,6 +204,7 @@ def main():
             num_iterations=args.num_iterations,
             samples_per_iteration=args.samples_per_iteration,
             annotator_noise=args.annotator_noise,
+            uncertainty_strategy=args.uncertainty_sampling_strategy,
         )
 
         print_comparison(random_results, uncertainty_results, seed=seed)
@@ -220,6 +223,7 @@ def main():
         "num_iterations": args.num_iterations,
         "pool_size": args.pool_size,
         "annotator_noise": args.annotator_noise,
+        "uncertainty_strategy": args.uncertainty_sampling_strategy,
     }
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
