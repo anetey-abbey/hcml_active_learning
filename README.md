@@ -9,7 +9,7 @@ This repo shows our HCML AL experiments.
 #### Original GameTox (6 classes)
 
 | Label ID | Class Name | Count | Percentage |
-|----------|------------|-------|------------|
+|----------|------------|------:|----------:|
 | 0 | NON_TOXIC | 43,497 | 81.0% |
 | 1 | INSULTS_FLAMING | 7,407 | 13.8% |
 | 2 | OTHER_OFFENSIVE | 2,343 | 4.4% |
@@ -21,7 +21,7 @@ This repo shows our HCML AL experiments.
 #### Merged GameTox (4 classes)
 
 | Label ID | Class Name | Count | Percentage |
-|----------|------------|-------|------------|
+|----------|------------|------:|----------:|
 | 0 | NON_TOXIC | 43,497 | 81.0% |
 | 1 | INSULTS_FLAMING | 7,407 | 13.8% |
 | 2 | OTHER_OFFENSIVE | 2,343 | 4.4% |
